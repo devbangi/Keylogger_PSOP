@@ -1,0 +1,40 @@
+-Keylogger for linux in C. Logs keystrokes and stores then locally.
+
+-In linux, everything is a file and that means our keystrokes on the keyboard is also a file itself.
+
+-The /dev/input folder have all the input devices present in the system.
+
+-Our event that handles the keyboard inputs: we will take a look at a file devices a the location /proc/bus/input :we will find all the devices and can map the event for our keyboard.
+
+-The name of the input device will be “AT Translated Set 2 keyboard” and EV=120013. Here my event number is event1.
+
+-We will be storing our stored data (keystrokes) in a logfile named “data” in the /tmp folder.
+
+-The program makes a structure ev, and then read the /dev/input/event1 file (of my keyboard), and append the keystrokes to the logfile at the /tmp folder.
+
+-ev.type is a movement on the keyboard taken in EV_KEY and the ev.value is set to 0 as when there is a keypress on a keyboard there is a keyrelease afterwards, so to prevent recording the same value again on keyrelease it is set to 0.
+
+-This code will now print all the keystrokes.
+
+-But the keystrokes are being mapped as numbers but not the actual values. These numbers are the corresponding values to each keys.
+
+-Now we have to find the file that handles these values and then map them accordingly to have our output as readable text.
+
+-For this we have to take a look at the file “input-event-codes.h” file at /usr/include/linux. Here in this file you will find all the values corresponding to each key on our keyboard.
+
+-Using this we will make a key-map in our code that will give the readable input corresponding to the numerical key value.
+
+-I have used first two dots in our map for reversed and escape to skip them, then map 0–9, minus and equal, again skipped backspace and tab using dots, and further mapped alphabets and other inputs.
+
+-Now that we have mapped the keystrokes, we are not mapping space, new line and we are printing the value on the terminal one word per line, for this we will modify our code to handle these situations.
+
+-This time our code will record all our keystrokes and save them to the /tmp folder in our logfile while taking care of spacing and new line.
+
+-So we have successfully made a keylogger for a linux system that will map all keystrokes and save them at /tmp folder in a logfile. This code can be modified for mapping backspaces and every key function.
+
+rulam cu sudo su : ca root
+
+- am rulat un modul de kernel care e ca un buffer in kernel in care putem scrie si citi (nasty):
+bash set_nasty.sh   :compileaza si ne introduce     un modul de kernel simplu in sistem;
+    In /dev sunt niste fisiere speciale, cum ar fi fisierul pt hard disk care are in spate driverul de hard disk; putem sa accesam fisierul ala ca sa accesam driverul de hard disk si logica din spate este implementata in driver. 
+Ei bine, acest modul de kernel, nasty, e un fel de driver doar ca nu are niciun dispozitiv in spate, el e programat sa expuna un fisier si sa ne dea niste date in momentul in care facem read pe el sau sa le scrie intr-un buffer intern cand facem write.
