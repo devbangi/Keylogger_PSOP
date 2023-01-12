@@ -1,0 +1,127 @@
+-Keylogger for linux in C. Logs keystrokes and stores then locally.
+
+-In linux, everything is a file and that means our keystrokes on the keyboard is also a file itself.
+
+-The /dev/input folder have all the input devices present in the system.
+
+-Our event that handles the keyboard inputs: we will take a look at a file devices a the location /proc/bus/input :we will find all the devices and can map the event for our keyboard.
+
+-The name of the input device will be “AT Translated Set 2 keyboard” and EV=120013. Here my event number is event1.
+
+-We will be storing our stored data (keystrokes) in a logfile named “data” in the /tmp folder.
+
+-The program makes a structure ev, and then read the /dev/input/event1 file (of my keyboard), and append the keystrokes to the logfile at the /tmp folder.
+
+-ev.type is a movement on the keyboard taken in EV_KEY and the ev.value is set to 0 as when there is a keypress on a keyboard there is a keyrelease afterwards, so to prevent recording the same value again on keyrelease it is set to 0.
+
+-This code will now print all the keystrokes.
+
+-But the keystrokes are being mapped as numbers but not the actual values. These numbers are the corresponding values to each keys.
+
+-Now we have to find the file that handles these values and then map them accordingly to have our output as readable text.
+
+-For this we have to take a look at the file “input-event-codes.h” file at /usr/include/linux. Here in this file you will find all the values corresponding to each key on our keyboard. : cat /usr/include/linux/input-event-codes.h
+
+-Using this we will make a key-map in our code that will give the readable input corresponding to the numerical key value.
+
+-I have used first two dots in our map for reversed and escape to skip them, then map 0–9, minus and equal, again skipped backspace and tab using dots, and further mapped alphabets and other inputs.
+
+-Now that we have mapped the keystrokes, we are not mapping space, new line and we are printing the value on the terminal one word per line, for this we will modify our code to handle these situations.
+
+-This time our code will record all our keystrokes and save them to the /tmp folder in our logfile while taking care of spacing and new line.
+
+-So we have successfully made a keylogger for a linux system that will map all keystrokes and save them at /tmp folder in a logfile. This code can be modified for mapping backspaces and every key function.
+
+rulam cu sudo su : ca root
+
+- am rulat un modul de kernel care e ca un buffer in kernel in care putem scrie si citi (nasty):
+bash set_nasty.sh   :compileaza si ne introduce     un modul de kernel simplu in sistem;
+    In /dev sunt niste fisiere speciale, cum ar fi fisierul pt hard disk care are in spate driverul de hard disk; putem sa accesam fisierul ala ca sa accesam driverul de hard disk si logica din spate este implementata in driver. 
+Ei bine, acest modul de kernel, nasty, e un fel de driver doar ca nu are niciun dispozitiv in spate, el e programat sa expuna un fisier si sa ne dea niste date in momentul in care facem read pe el sau sa le scrie intr-un buffer intern cand facem write.
+
+
+
+-trebuie retinut daca s-au sters caractere pt a nu le lua in considerare!!!
+
+-sudo cat /dev/kmsg
+ls -a /root    -> vad fisierele ascunse din root
+cat /usr/include/linux/input-event-codes.h
+
+eu:
+sudo hamachi login -- ma conectez la hamachi
+sudo service ssh start
+sudo systemctl status ssh
+
+tasklet = e un fel de chestie de amnare pe care o pot programa pentru a executa o functie sa se execute mai tarziu... 
+The softirq main job is to process packages via OVS and push them to user-space. 
+
+--pt open file  from kernel space m-am folosit de asta:
+Read/write files within a Linux modules:
+http://wiki.dreamrunner.org/public_html/Embedded-System/kernel/read-write-files-in-kernel-modules.html
+https://qguan.wordpress.com/2014/02/25/c-keynotes-keep-updating/
+https://stackoverflow.com/questions/74126284/check-if-filesystem-is-mounted-from-kernel-module
+Actually, the kernel does provide functions for file operation. For example, you can use filp_open(), vfs_read, and filp_close to open, read, and close a file. While, the problem is, the kernel expects the pointer passed to the filp_open() function call to be coming from user space, or the error -EFAULT occurs.
+
+The way to handle this address space mismatch is to use the functions get_fs() and set_fs(), which modify the current process address limits to whatever the caller wants.
+
+filp_open(const char *path, int flags, int rights)
+
+-- pentru a scrie un fisier in userspace din kernel:
+https://cpp.hotexamples.com/examples/-/-/vfs_write/cpp-vfs_write-function-examples.html
+
+-- pentru TASKLET: 
+Softirqs (short for "software interrupts") are a type of interrupt in the Linux kernel that are handled at a lower priority than regular hardware interrupts. They are used for tasks that do not need to be handled immediately, such as network packet processing or deferred disk I/O. Softirqs are processed by the kernel's bottom halves, which are executed in a non-interrupt context, allowing them to perform certain tasks that cannot be performed in an interrupt context. Softirqs are executed by the ksoftirqd kernel thread, which runs at a lower priority than regular kernel threads and only runs when there is work to be done.
+Tasklets are a type of software interrupt in the Linux kernel, similar to softirqs. They are used for running small, non-critical tasks in a deferred manner and are executed in a non-interrupt context. Unlike softirqs, tasklets are executed by the kernel's bottom half and scheduled for execution by the tasklet_schedule() function, which marks the tasklet as pending and schedules it to run later on the same CPU. Tasklets are executed by the tasklet_action() function, which is called from the kernel's tasklet scheduler. Tasklets are typically used for tasks that can be deferred, such as network packet processing or deferred disk I/O.
+https://linux-kernel-labs.github.io/refs/heads/master/labs/deferred_work.html
+https://www.oreilly.com/library/view/understanding-the-linux/0596005652/ch04s07.html
+-tasklets and other aspects of Linux kernel programming : "Linux Kernel Development" by Robert Love, "Understanding the Linux Kernel" by Daniel Bovet and Marco Cesati, and "Linux Device Drivers" by Jonathan Corbet, Alessandro Rubini, and Greg Kroah-Hartman.
+
+-- request_irq:
+int request_irq(unsigned int irq,
+   void (*handler)(int, void *, struct pt_regs *),
+   unsigned long flags, 
+   const char *dev_name,
+   void *dev_id);
+
+void free_irq(unsigned int irq, void *dev_id);
+https://www.oreilly.com/library/view/linux-device-drivers/0596000081/ch09s03.html
+
+https://linux-kernel-labs.github.io/refs/heads/master/labs/interrupts.html 
+flagul IRQF_SHARED : 
+                   announces the kernel that the interrupt can be shared with other devices. If this flag is not set, then if there is already a handler associated with the requested interrupt, the request for interrupt will fail. A shared interrupt is handled in a special way by the kernel: all of the associated interrupt handlers will be executed until the device that generated the interrupt will be identified. But how can a device driver know if the interrupt handling routine was activated by an interrupt generated by the device it manages? Virtually all devices that offer interrupt support have a status register that can be interrogated in the handling routine to see if the interrupt was or was not generated by the device (for example, in the case of the 8250 serial port, this status register is IIR - Interrupt Information Register). When requesting a shared interrupt, the dev_id argument must be unique and it must not be NULL. Usually it is set to module's private data.
+
+https://docs.kernel.org/core-api/genericirq.html
+
+pentru a lua irq number : To find out which interrupt line is associated with the keyboard, look in /proc/interrupts:
+https://kb.iu.edu/d/ailq => pt keyboard = 1
+
+pentru ultimul parametru al lui request_irq : void *dev_id
+                                            Pointer used for shared interrupt lines. It is a unique identifier that is used when the interrupt line is freed and that may also be used by the driver to point to its own private data area (to identify which device is interrupting). If the interrupt is not shared, dev_id can be set to NULL, but it a good idea anyway to use this item to point to the device structure.
+
+PTR_ERR(struct file fp) : is a macro that is used to convert a pointer to a file structure (struct file) into an error code(int). It is typically used in the Linux kernel to convert a pointer to a file structure into a negative error code if the pointer is invalid. The exact implementation of PTR_ERR may vary depending on the specific version of the Linux kernel being used
+
+VFS_WRITE : is a Linux kernel system call that allows a process to write data to a file. It is part of the Virtual File System (VFS) layer of the Linux kernel, which provides a common interface for accessing different file systems. VFS_WRITE is typically called by the write() system call, which is used by user-space applications to write data to a file. The VFS_WRITE function then calls the appropriate file system-specific function to perform the actual write operation.
+
+KERN_INFO is a macro used in the Linux kernel to specify the log level of a message. It is used in conjunction with the kernel's printk() function, which is used to print messages to the system log.
+
+The KERN_INFO macro is used to indicate that a message is an informational message. These messages are used to inform the administrator of the system of important events or conditions. For example, a message indicating that a particular driver has been loaded or that a particular service has started would be considered an informational message.
+
+The general syntax of using KERN_INFO is: printk(KERN_INFO "Your message here");
+This will print the message "Your message here" with the log level "KERN_INFO" in the kernel log buffer.
+KERN_INFO is one of the several macros that can be used to specify the log level of a message, other macros are:
+
+KERN_EMERG: System is unusable
+KERN_ALERT: Action must be taken immediately
+KERN_CRIT: Critical conditions
+KERN_ERR: Error conditions
+KERN_WARNING: Warning conditions
+KERN_NOTICE: Normal but significant condition
+KERN_INFO: Informational
+KERN_DEBUG: Debug-level messages
+Each of these macros represents a different log level, and messages with a higher log level will be considered more important than messages with a lower log level.
+
+inb(0x60) is a function call in the C programming language used to read a byte of data from the specified I/O port. The 0x60 is a hexadecimal number representing the port address of the keyboard controller on the PC. The function inb() reads a byte from the specified port and returns the value read.
+
+On the PC, the keyboard controller is responsible for communicating with the keyboard, and it uses the I/O port at address 0x60 to receive data from the keyboard. The keyboard sends data to the controller in the form of scan codes, which are unique numbers that correspond to the keys being pressed or released on the keyboard.
+
+A device driver or other software that wants to read the state of the keyboard must read the scan codes from the I/O port at address 0x60. The inb(0x60) function is used to read a byte of data from this port, which is the scan code of the key pressed or released.
